@@ -8,7 +8,7 @@ import 'jspdf-autotable';
 
 const Products = () => {
     const { user } = useAuth();
-    const { showToast } = useToast(); 
+    const { showToast } = useToast();
     const isAdmin = user?.role === 'Admin';
 
     const [products, setProducts] = useState([]);
@@ -27,7 +27,7 @@ const Products = () => {
 
     const fetchProducts = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/products', { headers: { Authorization: `Bearer ${token}` } });
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/products`, { headers: { Authorization: `Bearer ${token}` } });
             setProducts(res.data);
         } catch (error) {
             console.error("Error fetching products:", error);
@@ -36,7 +36,7 @@ const Products = () => {
 
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this product?')) {
-            await axios.delete(`http://localhost:5000/api/products/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/products/${id}`, { headers: { Authorization: `Bearer ${token}` } });
             fetchProducts();
         }
     };
@@ -47,27 +47,13 @@ const Products = () => {
         doc.save('products.pdf');
     };
 
-        const exportCSV = () => {
-        // Define the column headers
+    const exportCSV = () => {
         const headers = ["Name", "SKU", "Category", "Quantity", "Buying Price", "Selling Price"];
-        
-        // Map the product data to rows
         const rows = filteredProducts.map(p => [
-            `"${p.name}"`,
-            `"${p.sku}"`,
-            `"${p.category}"`,
-            p.current_quantity,
-            p.buying_price,
-            p.selling_price
+            `"${p.name}"`, `"${p.sku}"`, `"${p.category}"`, 
+            p.current_quantity, p.buying_price, p.selling_price
         ]);
-
-        // Combine headers and rows, separated by commas
-        const csvContent = [
-            headers.join(","),
-            ...rows.map(row => row.join(","))
-        ].join("\n");
-
-        // Create a Blob (a file) and trigger a download
+        const csvContent = [headers.join(","), ...rows.map(row => row.join(","))].join("\n");
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
@@ -107,10 +93,10 @@ const Products = () => {
         e.preventDefault();
         try {
             if (modalType === 'add') {
-                await axios.post('http://localhost:5000/api/products', formData, { headers: { Authorization: `Bearer ${token}` } });
-                  showToast('Product added successfully!');
+                await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/products`, formData, { headers: { Authorization: `Bearer ${token}` } });
+                showToast('Product added successfully!');
             } else if (modalType === 'edit') {
-                await axios.put(`http://localhost:5000/api/products/${selectedProduct.id}`, formData, { headers: { Authorization: `Bearer ${token}` } });
+                await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/products/${selectedProduct.id}`, formData, { headers: { Authorization: `Bearer ${token}` } });
                 showToast('Product updated successfully!');
             }
             closeModal();
@@ -118,25 +104,24 @@ const Products = () => {
         } catch (error) {
             console.error("Error saving product:", error);
             showToast('Failed to save product. SKU must be unique.', 'error');
-    
         }
     };
 
     const handleMovementSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/inventory/movement', {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/inventory/movement`, {
                 product_id: selectedProduct.id,
                 type: modalType.toUpperCase(), 
                 quantity: Number(movementQty),
                 reason: movementReason
             }, { headers: { Authorization: `Bearer ${token}` } });
-             showToast(`Stock ${modalType.toUpperCase()} recorded successfully!`);
+            showToast(`Stock ${modalType.toUpperCase()} recorded successfully!`);
             closeModal();
             fetchProducts();
         } catch (error) {
             console.error("Error updating stock:", error);
-             showToast('Failed to update stock.', 'error');
+            showToast('Failed to update stock.', 'error');
         }
     };
 
@@ -150,7 +135,7 @@ const Products = () => {
                     <input type="text" placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary outline-none" />
                 </div>
-                     <div className="flex gap-2">
+                <div className="flex gap-2">
                     <button onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
                         <Download size={18} /> Export PDF
                     </button>

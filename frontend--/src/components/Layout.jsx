@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { LayoutDashboard, Package, RefreshCw, Moon, Sun, LogOut, Bell, AlertTriangle, XCircle, History } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-import { LayoutDashboard, Package, RefreshCw, Moon, Sun, LogOut, Bell, AlertTriangle, XCircle, History } from 'lucide-react';
 
 const Layout = ({ children }) => {
     const { darkMode, toggleDarkMode } = useTheme();
@@ -16,7 +16,7 @@ const Layout = ({ children }) => {
         const fetchNotifications = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const res = await axios.get('http://localhost:5000/api/products', {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/products`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const lowStock = res.data.filter(p => p.current_quantity <= p.min_stock_level);
@@ -28,11 +28,10 @@ const Layout = ({ children }) => {
         fetchNotifications();
     }, []);
 
-    // Filter out Restock page if user is not Admin
-      const navItems = [
+    const navItems = [
         { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
         { name: 'Products', icon: Package, path: '/products' },
-        { name: 'History', icon: History, path: '/history' }, // <-- ADDED
+        { name: 'History', icon: History, path: '/history' },
         { name: 'Restock', icon: RefreshCw, path: '/restock', adminOnly: true },
     ].filter(item => !item.adminOnly || (user && user.role === 'Admin'));
 
@@ -118,7 +117,6 @@ const Layout = ({ children }) => {
                                             )}
                                         </div>
                                             
-                                          {/* Only show this button if the user is an Admin */}
                                         {lowStockItems.length > 0 && user?.role === 'Admin' && (
                                             <Link to="/restock" onClick={() => { setActive('Restock'); setShowNotifications(false); }} className="block w-full text-center p-3 bg-gray-50 dark:bg-gray-900/50 text-primary font-medium text-sm hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors">
                                                 View Restock List

@@ -10,7 +10,7 @@ const History = () => {
     useEffect(() => {
         const fetchMovements = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/inventory/movements', {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/inventory/movements`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setMovements(res.data);
@@ -27,7 +27,6 @@ const History = () => {
         m.reason?.toLowerCase().includes(search.toLowerCase())
     );
 
-    // Format date to be readable
     const formatDate = (dateString) => {
         const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
         return new Date(dateString).toLocaleDateString(undefined, options);

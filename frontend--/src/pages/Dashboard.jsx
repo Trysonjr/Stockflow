@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { Package, AlertTriangle, XCircle, TrendingUp, ArrowDownToLine, ArrowUpFromLine, X, DollarSign, Wallet, PiggyBank } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
 
 const Dashboard = () => {
     const { user } = useAuth();
     const isAdmin = user?.role === 'Admin';
+    
     const [stats, setStats] = useState({ total: 0, lowStock: 0, outStock: 0, recent: [], assetValue: 0, potentialRevenue: 0, potentialProfit: 0 });
     const [activeDay, setActiveDay] = useState(null);
 
@@ -14,7 +15,7 @@ const Dashboard = () => {
         const fetchStats = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const res = await axios.get('http://localhost:5000/api/inventory/stats', {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/inventory/stats`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setStats(res.data);
@@ -44,7 +45,6 @@ const Dashboard = () => {
         if (payload) setActiveDay(payload);
     };
 
-    // Helper to format numbers as currency
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
     };
@@ -82,38 +82,37 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {/* NEW: Financial Valuation Cards (Admin Only) */}
+            {/* Financial Valuation Cards (Admin Only) */}
             {isAdmin && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="card flex items-center gap-4">
-                    <div className="p-4 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
-                        <Wallet className="text-indigo-600 dark:text-indigo-400" size={28} />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="card flex items-center gap-4">
+                        <div className="p-4 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
+                            <Wallet className="text-indigo-600 dark:text-indigo-400" size={28} />
+                        </div>
+                        <div>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Inventory Asset Value</p>
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.assetValue)}</h3>
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Inventory Asset Value</p>
-                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.assetValue)}</h3>
+                    <div className="card flex items-center gap-4">
+                        <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-xl">
+                            <DollarSign className="text-green-600 dark:text-green-400" size={28} />
+                        </div>
+                        <div>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Potential Revenue</p>
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.potentialRevenue)}</h3>
+                        </div>
+                    </div>
+                    <div className="card flex items-center gap-4">
+                        <div className="p-4 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+                            <PiggyBank className="text-primary dark:text-blue-400" size={28} />
+                        </div>
+                        <div>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Potential Profit</p>
+                            <h3 className="text-2xl font-bold text-primary dark:text-blue-400">{formatCurrency(stats.potentialProfit)}</h3>
+                        </div>
                     </div>
                 </div>
-                <div className="card flex items-center gap-4">
-                    <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-xl">
-                        <DollarSign className="text-green-600 dark:text-green-400" size={28} />
-                    </div>
-                    <div>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Potential Revenue</p>
-                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.potentialRevenue)}</h3>
-                    </div>
-                </div>
-                <div className="card flex items-center gap-4">
-                    <div className="p-4 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
-                        <PiggyBank className="text-primary dark:text-blue-400" size={28} />
-                    </div>
-                    <div>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Potential Profit</p>
-                        <h3 className="text-2xl font-bold text-primary dark:text-blue-400">{formatCurrency(stats.potentialProfit)}</h3>
-                    </div>
-                </div>
-            </div>
-
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

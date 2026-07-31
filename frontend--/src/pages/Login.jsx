@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Package, LogIn, Boxes, TrendingUp, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Package, LogIn, Mail, Lock, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 
 const Login = () => {
     const [email, setEmail] = useState('admin@stockflow.com');
-    const [password, setPassword] = useState('password123');
+    const [password, setPassword] = useState('temppass');
     const { login } = useAuth();
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/login`, { email, password });
             login(res.data.user, res.data.token);
             navigate('/');
         } catch (err) {
@@ -51,19 +51,19 @@ const Login = () => {
                     <div className="space-y-4 pt-4">
                         <div className="flex items-center gap-4">
                             <div className="bg-white/20 p-2.5 rounded-lg backdrop-blur-sm">
-                                <Boxes size={22} />
+                                <Package size={22} />
                             </div>
                             <p className="font-medium text-lg">Real-time stock tracking</p>
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="bg-white/20 p-2.5 rounded-lg backdrop-blur-sm">
-                                <TrendingUp size={22} />
+                                <ArrowRight size={22} />
                             </div>
                             <p className="font-medium text-lg">Smart restock cost calculations</p>
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="bg-white/20 p-2.5 rounded-lg backdrop-blur-sm">
-                                <ShieldCheck size={22} />
+                                <Lock size={22} />
                             </div>
                             <p className="font-medium text-lg">Role-based team access</p>
                         </div>
@@ -72,7 +72,7 @@ const Login = () => {
 
                 {/* Footer */}
                 <div className="relative z-10 text-sm text-blue-200">
-                    © 2026 StockFlow Inc. All rights reserved.
+                    © 2024 StockFlow Inc. All rights reserved.
                 </div>
             </div>
 

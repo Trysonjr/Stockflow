@@ -9,7 +9,7 @@ const Restock = () => {
     useEffect(() => {
         const fetchLowStock = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/products', { headers: { Authorization: `Bearer ${token}` } });
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/products`, { headers: { Authorization: `Bearer ${token}` } });
                 const lowStock = res.data.filter(p => p.current_quantity <= p.min_stock_level);
                 const withCost = lowStock.map(p => ({
                     ...p,
