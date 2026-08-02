@@ -1,26 +1,19 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 
 const ThemeContext = createContext();
-
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
-    const [darkMode, setDarkMode] = useState(false);
-
-    const toggleDarkMode = () => {
-        setDarkMode((prev) => !prev);
-    };
+    // Force dark mode to always be ON
+    const darkMode = true;
 
     useEffect(() => {
-        if (darkMode) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    }, [darkMode]);
+        // Always add the 'dark' class to the HTML element
+        document.documentElement.classList.add('dark');
+    }, []);
 
     return (
-        <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
+        <ThemeContext.Provider value={{ darkMode }}>
             {children}
         </ThemeContext.Provider>
     );

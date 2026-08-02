@@ -33,7 +33,7 @@ const Restock = () => {
                 <div>
                     <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Estimated Total Restocking Cost</p>
                     <h3 className="text-3xl font-extrabold mt-1 text-primary dark:text-blue-400">
-                        ${totalCost.toFixed(2)}
+                        K {totalCost.toFixed(2)}
                     </h3>
                 </div>
                 <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
@@ -65,7 +65,7 @@ const Restock = () => {
                                     <td className="p-4 text-red-500 font-bold">{item.current_quantity}</td>
                                     <td className="p-4 text-gray-500 dark:text-gray-400">{item.min_stock_level}</td>
                                     <td className="p-4 text-primary font-bold">{item.needed}</td>
-                                    <td className="p-4 font-medium text-gray-900 dark:text-white">${item.cost.toFixed(2)}</td>
+                                    <td className="p-4 font-medium text-gray-900 dark:text-white">K {item.cost.toFixed(2)}</td>
                                 </tr>
                             ))}
                             {restockList.length === 0 && (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Download, Pencil, ArrowDownToLine, ArrowUpFromLine, Trash2, X, FileDown } from 'lucide-react';
+import { Search, Plus, Download, Pencil, ArrowDownToLine, ArrowUpFromLine, Trash2, X, FileDown, Upload, Sparkles, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import axios from 'axios';
@@ -22,6 +22,7 @@ const Products = () => {
     const [formData, setFormData] = useState({ name: '', sku: '', category: '', buying_price: 0, selling_price: 0, current_quantity: 0, min_stock_level: 0 });
     const [movementQty, setMovementQty] = useState(0);
     const [movementReason, setMovementReason] = useState('');
+    const [aiLoading, setAiLoading] = useState(false); // <-- AI Loading State
 
     useEffect(() => { fetchProducts(); }, []);
 
@@ -65,6 +66,23 @@ const Products = () => {
         document.body.removeChild(link);
     };
 
+    const handleImport = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/products/import`, formData, {
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+            });
+            showToast('Products imported successfully!');
+            fetchProducts(); 
+        } catch (error) {
+            console.error("Error importing products:", error);
+            showToast('Failed to import Excel file.', 'error');
+        }
+    };
+
     const openModal = (type, product = null) => {
         setModalType(type);
         setSelectedProduct(product);
@@ -87,6 +105,35 @@ const Products = () => {
         setIsModalOpen(false);
         setSelectedProduct(null);
         setModalType('');
+    };
+
+    const handleAIGenerate = async () => {
+        if (!formData.name) {
+            showToast('Please enter a product name first', 'error');
+            return;
+        }
+        setAiLoading(true);
+        try {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/ai/generate-product`, 
+                { productName: formData.name },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            
+            setFormData({
+                ...formData,
+                sku: res.data.sku || '',
+                category: res.data.category || '',
+                buying_price: res.data.buying_price || 0,
+                selling_price: res.data.selling_price || 0,
+                min_stock_level: res.data.min_stock_level || 10
+            });
+            showToast('AI generated details successfully!');
+        } catch (error) {
+            console.error("AI Error:", error);
+            showToast('Failed to generate AI details.', 'error');
+        } finally {
+            setAiLoading(false);
+        }
     };
 
     const handleProductSubmit = async (e) => {
@@ -135,13 +182,21 @@ const Products = () => {
                     <input type="text" placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary outline-none" />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                     <button onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <Download size={18} /> Export PDF
+                        <Download size={18} /> PDF
                     </button>
                     <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <FileDown size={18} /> Export CSV
+                        <FileDown size={18} /> CSV
                     </button>
+                    
+                    {isAdmin && (
+                        <label className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 cursor-pointer transition-colors">
+                            <Upload size={18} /> Import Excel
+                            <input type="file" accept=".xlsx, .xls" onChange={handleImport} className="hidden" />
+                        </label>
+                    )}
+
                     {isAdmin && (
                         <button onClick={() => openModal('add')} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700">
                             <Plus size={18} /> Add Product
@@ -173,7 +228,7 @@ const Products = () => {
                                         {p.current_quantity}
                                     </span>
                                 </td>
-                                <td className="p-4">${p.selling_price}</td>
+                                <td className="p-4">K {Number(p.selling_price).toFixed(2)}</td>
                                 <td className="p-4">
                                     <div className="flex gap-2">
                                         {isAdmin && (
@@ -218,6 +273,23 @@ const Products = () => {
                                     <label className="block text-sm font-medium mb-1">Name</label>
                                     <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-2 border rounded-lg bg-transparent" required />
                                 </div>
+                                
+                                {/* AI Generate Button */}
+                                {modalType === 'add' && (
+                                    <button 
+                                        type="button" 
+                                        onClick={handleAIGenerate} 
+                                        disabled={aiLoading}
+                                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-2 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                                    >
+                                        {aiLoading ? (
+                                            <><Loader2 size={18} className="animate-spin" /> Generating...</>
+                                        ) : (
+                                            <><Sparkles size={18} /> Generate Details with AI</>
+                                        )}
+                                    </button>
+                                )}
+
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium mb-1">SKU</label>
@@ -230,11 +302,11 @@ const Products = () => {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium mb-1">Buying Price</label>
+                                        <label className="block text-sm font-medium mb-1">Buying Price (K)</label>
                                         <input type="number" step="0.01" value={formData.buying_price} onChange={(e) => setFormData({...formData, buying_price: e.target.value})} className="w-full p-2 border rounded-lg bg-transparent" required />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium mb-1">Selling Price</label>
+                                        <label className="block text-sm font-medium mb-1">Selling Price (K)</label>
                                         <input type="number" step="0.01" value={formData.selling_price} onChange={(e) => setFormData({...formData, selling_price: e.target.value})} className="w-full p-2 border rounded-lg bg-transparent" required />
                                     </div>
                                 </div>
