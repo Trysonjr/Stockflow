@@ -17,8 +17,8 @@ router.post('/login', async (req, res) => {
         const user = users[0];
         
         // --->  PASSWORD CHECK  <---
-         //const isMatch = await bcrypt.compare(password, user.password);
-         //if (!isMatch) return res.status(400).json({ message: 'Invalid password' });
+         const isMatch = await bcrypt.compare(password, user.password);
+         if (!isMatch) return res.status(400).json({ message: 'Invalid password' });
 
         // Create and send JWT
         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
