@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, Loader2, DollarSign, Receipt, ScanLine, Trash2, Search } from 'lucide-react';
+import { ShoppingCart, Loader2, DollarSign, Receipt, ScanLine, Trash2, Search, Camera, X } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import { Html5Qrcode } from 'html5-qrcode';
 
 const Sales = () => {
     const { showToast } = useToast();
@@ -14,8 +15,10 @@ const Sales = () => {
     const [loading, setLoading] = useState(false);
     const [scanInput, setScanInput] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [isCameraOpen, setIsCameraOpen] = useState(false);
     const token = localStorage.getItem('token');
     const scanRef = useRef(null);
+    const html5QrCodeRef = useRef(null);
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -96,11 +99,48 @@ const Sales = () => {
             setCart([...cart, { 
                 product_id: product.id, 
                 name: product.name, 
-                price: Number(product.selling_price), // FIX: Ensure this is a number
+                price: Number(product.selling_price), 
                 quantity: qty 
             }]);
             showToast(`${product.name} added to cart`);
         }
+    };
+
+    // --- NEW: Camera Scanner Functions ---
+    const startCamera = () => {
+        setIsCameraOpen(true);
+        setTimeout(() => {
+            html5QrCodeRef.current = new Html5Qrcode("camera-reader-sales");
+            html5QrCodeRef.current.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 150 } },
+                (decodedText) => {
+                    const scannedSku = decodedText.trim().toLowerCase();
+                    const foundProduct = products.find(p => p.sku.toLowerCase() === scannedSku);
+                    
+                    if (foundProduct) {
+                        addToCart(foundProduct);
+                        stopCamera(); // Close camera after successful scan
+                    } else {
+                        showToast(`No product found for barcode: ${decodedText}`, 'error');
+                    }
+                },
+                () => {}
+            ).catch(err => {
+                showToast("Camera access denied.", 'error');
+                setIsCameraOpen(false);
+            });
+        }, 100);
+    };
+
+    const stopCamera = async () => {
+        if (html5QrCodeRef.current) {
+            try {
+                await html5QrCodeRef.current.stop();
+                await html5QrCodeRef.current.clear();
+            } catch (err) { console.error(err); }
+        }
+        setIsCameraOpen(false);
     };
 
     const handleScanKeyDown = (e) => {
@@ -166,24 +206,29 @@ const Sales = () => {
             <div className="grid lg:grid-cols-3 gap-6">
                 {/* Left Side: Scanning & Product Grid (2/3 width) */}
                 <div className="lg:col-span-2 space-y-6">
-                    {/* Barcode Scanner Input Bar */}
-                    <div className="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex items-center gap-4">
-                        <div className="p-3 bg-green-500/10 rounded-xl">
-                            <ScanLine className="text-green-400" size={28} />
+                    {/* Scanner Input Bar */}
+                    <div className="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex flex-col gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-green-500/10 rounded-xl">
+                                <ScanLine className="text-green-400" size={28} />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-sm font-bold text-white">Ready to Scan</h3>
+                                <p className="text-xs text-gray-400 mb-2">Click here and scan with your USB/Bluetooth scanner</p>
+                                <input 
+                                    ref={scanRef}
+                                    type="text" 
+                                    value={scanInput} 
+                                    onChange={(e) => setScanInput(e.target.value)} 
+                                    onKeyDown={handleScanKeyDown} 
+                                    placeholder="Waiting for scanner..." 
+                                    className="w-full p-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-green-500 outline-none"
+                                />
+                            </div>
                         </div>
-                        <div className="flex-1">
-                            <h3 className="text-sm font-bold text-white">Ready to Scan</h3>
-                            <p className="text-xs text-gray-400 mb-2">Click here and scan an item with your scanner</p>
-                            <input 
-                                ref={scanRef}
-                                type="text" 
-                                value={scanInput} 
-                                onChange={(e) => setScanInput(e.target.value)} 
-                                onKeyDown={handleScanKeyDown} 
-                                placeholder="Waiting for scanner..." 
-                                className="w-full p-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-green-500 outline-none"
-                            />
-                        </div>
+                        <button onClick={startCamera} className="flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                            <Camera size={20} /> Scan with Phone Camera
+                        </button>
                     </div>
 
                     {/* Product Search & Grid */}
@@ -328,6 +373,20 @@ const Sales = () => {
                     </tbody>
                 </table>
             </div>
+
+            {/* Camera Scanner Modal for Sales */}
+            {isCameraOpen && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
+                    <div className="bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6 relative border border-gray-700">
+                        <button onClick={stopCamera} className="absolute top-4 right-4 text-gray-400 hover:text-white z-10 bg-gray-900/50 p-2 rounded-full">
+                            <X size={24} />
+                        </button>
+                        <h2 className="text-xl font-bold mb-4 text-white text-center">Scan Barcode to Add to Cart</h2>
+                        <div id="camera-reader-sales" className="w-full rounded-lg overflow-hidden"></div>
+                        <p className="text-sm text-gray-400 text-center mt-4">Point your camera at the product barcode.</p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

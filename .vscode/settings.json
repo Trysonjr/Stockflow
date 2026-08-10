@@ -1,4 +1,4 @@
 {
     "js/ts.experimental.useTsgo": false,
-    "gitdoc.enabled": true
+    "gitdoc.enabled": false
 }
