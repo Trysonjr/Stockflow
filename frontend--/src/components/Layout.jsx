@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Package, RefreshCw, LogOut, Bell, AlertTriangle, XCircle, History, Sparkles, Building2, Menu, X, Globe, Tag, ClipboardList, ShoppingCart, BarChart3, Users, Wallet } from 'lucide-react';  
+import { LayoutDashboard, Package, RefreshCw, LogOut, Bell, AlertTriangle, XCircle, History, Sparkles, Building2, Menu, X, Globe, Tag, ClipboardList, ShoppingCart, BarChart3, Users, Wallet } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
@@ -79,15 +79,16 @@ const Layout = ({ children }) => {
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden w-full">
                 {/* Topbar */}
-                <header className="h-16 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-6 relative z-20 shrink-0">
-                    <div className="flex items-center gap-4">
+                <header className="h-16 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-4 md:px-6 relative z-20 shrink-0">
+                    <div className="flex items-center gap-2 md:gap-4">
                         <button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-700 text-gray-300">
                             <Menu size={24} />
                         </button>
-                        <h1 className="text-xl font-semibold text-white">{active}</h1>
+                        {/* Hide title on very small screens to save space */}
+                        <h1 className="text-lg md:text-xl font-semibold text-white hidden sm:block">{active}</h1>
                     </div>
                     
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 md:gap-4">
                         {/* Notification Bell */}
                         <div className="relative">
                             <button onClick={() => setShowNotifications(!showNotifications)} className="relative p-2 rounded-full hover:bg-gray-700 text-gray-300">
@@ -98,7 +99,7 @@ const Layout = ({ children }) => {
                             {showNotifications && (
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setShowNotifications(false)}></div>
-                                    <div className="absolute right-0 mt-2 w-80 bg-gray-800 rounded-xl shadow-2xl border border-gray-700 z-20 overflow-hidden">
+                                    <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-gray-800 rounded-xl shadow-2xl border border-gray-700 z-20 overflow-hidden">
                                         <div className="p-4 border-b border-gray-700 flex justify-between items-center">
                                             <h3 className="font-bold text-white">Notifications</h3>
                                             <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full font-medium">{lowStockItems.length} Alerts</span>
@@ -136,7 +137,7 @@ const Layout = ({ children }) => {
                 </header>
                 
                 {/* Page Content */}
-                <main className="flex-1 overflow-y-auto p-6 bg-gray-900">
+                <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-900">
                     {children}
                 </main>
             </div>

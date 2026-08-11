@@ -1,20 +1,19 @@
 @import "tailwindcss";
 
-/* This tells Tailwind to use a "dark" class instead of the computer's theme */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* This is your custom blue color */
 @theme {
   --color-primary: #2563eb;
 }
 
-/* Global styles */
 body {
   @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300;
+  /* Prevent horizontal scrolling on mobile */
+  overflow-x: hidden; 
 }
 
 .card {
-  @apply bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-all duration-300 hover:shadow-md;
+  @apply bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-all duration-300 hover:shadow-md;
 }
 
 /* Animations for the login page */
@@ -34,4 +33,14 @@ body {
 
 .animation-delay-4000 {
   animation-delay: 4s;
+}
+
+/* Mobile Table Scroll Fix */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-wrap table {
+  min-width: 600px;
 }
