@@ -20,42 +20,41 @@ const Layout = ({ children }) => {
                 });
                 const lowStock = res.data.filter(p => p.current_quantity <= p.min_stock_level);
                 setLowStockItems(lowStock);
-            } catch (error) {
-                console.error("Error fetching notifications", error);
-            }
+            } catch (error) { console.error("Error fetching notifications", error); }
         };
         fetchNotifications();
     }, []);
 
-    const navItems = [
-        { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-        { name: 'Products', icon: Package, path: '/products' },
-        { name: 'Sales / POS', icon: ShoppingCart, path: '/sales' },
-        { name: 'Orders', icon: ClipboardList, path: '/orders', adminOnly: true },
-        { name: 'Expenses', icon: Wallet, path: '/expenses', adminOnly: true },
-        { name: 'Suppliers', icon: Building2, path: '/suppliers' },
-        { name: 'Categories', icon: Tag, path: '/categories' },
-        { name: 'Reports', icon: BarChart3, path: '/reports', adminOnly: true },
-        { name: 'Team', icon: Users, path: '/team', adminOnly: true },
-        { name: 'History', icon: History, path: '/history' },
-        { name: 'AI Assistant', icon: Sparkles, path: '/ai-assistant' },
-        { name: 'Restock', icon: RefreshCw, path: '/restock', adminOnly: true },
-    ].filter(item => !item.adminOnly || (user && user.role === 'Admin'));
+    // Parse permissions if they exist
+    const userPerms = user?.permissions ? JSON.parse(user.permissions) : {};
 
-    const handleNavClick = (name) => {
-        setActive(name);
-        setIsSidebarOpen(false);
-    };
+    const allNavItems = [
+        { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', perm: 'Dashboard' },
+        { name: 'Products', icon: Package, path: '/products', perm: 'Products' },
+        { name: 'Sales / POS', icon: ShoppingCart, path: '/sales', perm: 'Sales' },
+        { name: 'Orders', icon: ClipboardList, path: '/orders', adminOnly: true, perm: 'Orders' },
+        { name: 'Expenses', icon: Wallet, path: '/expenses', adminOnly: true, perm: 'Expenses' },
+        { name: 'Suppliers', icon: Building2, path: '/suppliers', perm: 'Suppliers' },
+        { name: 'Categories', icon: Tag, path: '/categories', perm: 'Categories' },
+        { name: 'Reports', icon: BarChart3, path: '/reports', adminOnly: true, perm: 'Reports' },
+        { name: 'Team', icon: Users, path: '/team', adminOnly: true, perm: 'Team' },
+        { name: 'History', icon: History, path: '/history', perm: 'History' },
+        { name: 'AI Assistant', icon: Sparkles, path: '/ai-assistant', perm: 'Assistant' },
+        { name: 'Restock', icon: RefreshCw, path: '/restock', adminOnly: true, perm: 'Restock' },
+    ];
+
+    // Filter logic: Admins see everything. Staff only see what Master Admin allows.
+    const navItems = allNavItems.filter(item => {
+        if (user?.role === 'Admin') return true; // Admins see all (Master Admin)
+        return userPerms[item.perm]; // Staff see only what is checked
+    });
+
+    const handleNavClick = (name) => { setActive(name); setIsSidebarOpen(false); };
 
     return (
         <div className="flex h-screen overflow-hidden bg-gray-900">
-            
-            {/* Dark Backdrop for Sidebar */}
-            {isSidebarOpen && (
-                <div className="fixed inset-0 bg-black/50 z-30 transition-opacity" onClick={() => setIsSidebarOpen(false)}></div>
-            )}
+            {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 transition-opacity" onClick={() => setIsSidebarOpen(false)}></div>}
 
-            {/* Sidebar (Drawer) */}
             <div className={`fixed z-40 w-64 h-full bg-gray-800 border-r border-gray-700 flex flex-col transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="p-6 text-2xl font-bold text-blue-500 flex items-center justify-between">
                     <div className="flex items-center gap-2"><Package /> StockFlow</div>
@@ -70,32 +69,23 @@ const Layout = ({ children }) => {
                     ))}
                 </nav>
                 <div className="p-4 border-t border-gray-700">
-                    <Link to="/" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-400 hover:text-blue-500 transition-colors">
-                        <Globe size={18} /> Back to Website
-                    </Link>
+                    <Link to="/" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-400 hover:text-blue-500 transition-colors"><Globe size={18} /> Back to Website</Link>
                 </div>
             </div>
 
-            {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden w-full">
-                {/* Topbar */}
                 <header className="h-16 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-4 md:px-6 relative z-20 shrink-0">
                     <div className="flex items-center gap-2 md:gap-4">
-                        <button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-700 text-gray-300">
-                            <Menu size={24} />
-                        </button>
-                        {/* Hide title on very small screens to save space */}
+                        <button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-700 text-gray-300"><Menu size={24} /></button>
                         <h1 className="text-lg md:text-xl font-semibold text-white hidden sm:block">{active}</h1>
                     </div>
                     
                     <div className="flex items-center gap-2 md:gap-4">
-                        {/* Notification Bell */}
                         <div className="relative">
                             <button onClick={() => setShowNotifications(!showNotifications)} className="relative p-2 rounded-full hover:bg-gray-700 text-gray-300">
                                 <Bell size={20} />
                                 {lowStockItems.length > 0 && <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{lowStockItems.length}</span>}
                             </button>
-
                             {showNotifications && (
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setShowNotifications(false)}></div>
@@ -113,10 +103,7 @@ const Layout = ({ children }) => {
                                                         <div className={`p-2 rounded-lg ${item.current_quantity === 0 ? 'bg-red-500/10' : 'bg-yellow-500/10'}`}>
                                                             {item.current_quantity === 0 ? <XCircle size={16} className="text-red-500" /> : <AlertTriangle size={16} className="text-yellow-500" />}
                                                         </div>
-                                                        <div className="flex-1">
-                                                            <p className="text-sm font-medium text-white">{item.name}</p>
-                                                            <p className="text-xs text-gray-400 mt-1">{item.current_quantity === 0 ? 'Is completely out of stock!' : `Is running low (${item.current_quantity} left)`}</p>
-                                                        </div>
+                                                        <div className="flex-1"><p className="text-sm font-medium text-white">{item.name}</p><p className="text-xs text-gray-400 mt-1">{item.current_quantity === 0 ? 'Is completely out of stock!' : `Is running low (${item.current_quantity} left)`}</p></div>
                                                     </div>
                                                 ))
                                             )}
@@ -128,18 +115,13 @@ const Layout = ({ children }) => {
                                 </>
                             )}
                         </div>
-
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">{user?.name.charAt(0)}</div>
                             <button onClick={logout} className="text-gray-400 hover:text-red-500"><LogOut size={20} /></button>
                         </div>
                     </div>
                 </header>
-                
-                {/* Page Content */}
-                <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-900">
-                    {children}
-                </main>
+                <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-900">{children}</main>
             </div>
         </div>
     );

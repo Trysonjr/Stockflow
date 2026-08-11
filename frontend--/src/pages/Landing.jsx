@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Package, BarChart3, BrainCircuit, Users, ArrowRight, X, Lock, Mail, User, ShoppingCart, ClipboardList, Sparkles, CheckCircle, Boxes, TrendingUp, ScanLine } from 'lucide-react';
+import { Package, BarChart3, BrainCircuit, Users, ArrowRight, X, Lock, Mail, User, ShoppingCart, ClipboardList, Sparkles, CheckCircle, Boxes, TrendingUp, ScanLine, Wallet } from 'lucide-react';
 import axios from 'axios';
 
 const Landing = () => {
@@ -38,14 +38,14 @@ const Landing = () => {
     };
 
     return (
-        <div className="bg-[#0a0a0f] text-white overflow-hidden">
+        <div className="bg-[#0a0a0f] text-white overflow-hidden pb-16"> {/* pb-16 so fixed marquee doesn't cover footer */}
             <style>{`
                 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
                 @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
                 @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
                 .animate-float { animation: float 6s ease-in-out infinite; }
                 .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; }
-                .animate-marquee { animation: marquee 20s linear infinite; }
+                .animate-marquee { animation: marquee 12s linear infinite; } /* Increased speed */
                 .gradient-text { background: linear-gradient(to right, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
             `}</style>
 
@@ -112,31 +112,26 @@ const Landing = () => {
                 </div>
             </header>
 
-            {/* Scrolling Marquee (Speaks to StockFlow) */}
-            <div className="py-6 bg-gray-900/50 border-y border-gray-800 overflow-hidden">
-                <div className="flex animate-marquee whitespace-nowrap">
-                    <div className="flex items-center gap-8 mx-4 text-gray-500 text-lg font-semibold">
-                        <span className="flex items-center gap-2"><Boxes size={20} className="text-blue-500" /> Real-Time Tracking</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-2"><ScanLine size={20} className="text-blue-500" /> Barcode Scanning</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-2"><ClipboardList size={20} className="text-purple-500" /> Purchase Orders</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-2"><TrendingUp size={20} className="text-green-500" /> Net Profit Analytics</span>
-                        <span>•</span>
+            {/* How It Works Section (With Image) */}
+            <section id="workflow" className="py-20 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-blue-600/10 rounded-full filter blur-[100px]"></div>
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-6">From warehouse to checkout in seconds</h2>
+                        <p className="text-gray-400 mb-8">StockFlow integrates your physical inventory with your digital sales. Say goodbye to manual spreadsheets and disconnected systems.</p>
+                        <ul className="space-y-4">
+                            <li className="flex items-center gap-3 text-gray-300"><CheckCircle className="text-green-500" size={20} /> Automatic stock deductions on every sale</li>
+                            <li className="flex items-center gap-3 text-gray-300"><CheckCircle className="text-green-500" size={20} /> Instant alerts for low and out-of-stock items</li>
+                            <li className="flex items-center gap-3 text-gray-300"><CheckCircle className="text-green-500" size={20} /> Role-based access for Admins and Staff</li>
+                            <li className="flex items-center gap-3 text-gray-300"><CheckCircle className="text-green-500" size={20} /> Export reports to PDF or CSV instantly</li>
+                        </ul>
                     </div>
-                    <div className="flex items-center gap-8 mx-4 text-gray-500 text-lg font-semibold">
-                        <span className="flex items-center gap-2"><Boxes size={20} className="text-blue-500" /> Real-Time Tracking</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-2"><ScanLine size={20} className="text-blue-500" /> Barcode Scanning</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-2"><ClipboardList size={20} className="text-purple-500" /> Purchase Orders</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-2"><TrendingUp size={20} className="text-green-500" /> Net Profit Analytics</span>
-                        <span>•</span>
+                    <div className="relative rounded-2xl overflow-hidden border border-gray-800 shadow-2xl transform transition-transform hover:scale-[1.02] duration-300">
+                        <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop" alt="Warehouse Management" className="w-full h-[400px] object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] to-transparent"></div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             {/* Features Section */}
             <section id="features" className="py-20 bg-[#0d0d14] border-t border-gray-800/50">
@@ -187,6 +182,40 @@ const Landing = () => {
                     © 2026 StockFlow Inc. Manage smarter. Restock faster. Grow confidently.
                 </div>
             </footer>
+
+            {/* FIXED SCROLLING MARQUEE */}
+            <div className="fixed bottom-0 left-0 right-0 z-30 py-3 bg-[#0d0d14] border-t border-gray-800 overflow-hidden">
+                <div className="flex animate-marquee whitespace-nowrap">
+                    <div className="flex items-center gap-6 mx-3 text-gray-500 text-sm font-semibold">
+                        <span className="flex items-center gap-2"><Boxes size={16} className="text-blue-500" /> Real-Time Tracking</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-2"><ScanLine size={16} className="text-blue-500" /> Barcode Scanning</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-2"><ClipboardList size={16} className="text-purple-500" /> Purchase Orders</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-2"><Wallet size={16} className="text-red-500" /> Expense Tracking</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-2"><TrendingUp size={16} className="text-green-500" /> Net Profit Analytics</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-2"><BrainCircuit size={16} className="text-purple-500" /> AI Insights</span>
+                        <span>•</span>
+                    </div>
+                    <div className="flex items-center gap-6 mx-3 text-gray-500 text-sm font-semibold">
+                        <span className="flex items-center gap-2"><Boxes size={16} className="text-blue-500" /> Real-Time Tracking</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-2"><ScanLine size={16} className="text-blue-500" /> Barcode Scanning</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-2"><ClipboardList size={16} className="text-purple-500" /> Purchase Orders</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-2"><Wallet size={16} className="text-red-500" /> Expense Tracking</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-2"><TrendingUp size={16} className="text-green-500" /> Net Profit Analytics</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-2"><BrainCircuit size={16} className="text-purple-500" /> AI Insights</span>
+                        <span>•</span>
+                    </div>
+                </div>
+            </div>
 
             {/* AUTH POPUP MODAL */}
             {authMode && (

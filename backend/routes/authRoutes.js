@@ -21,8 +21,8 @@ router.post('/login', async (req, res) => {
          if (!isMatch) return res.status(400).json({ message: 'Invalid password' });
 
         // Create and send JWT
-        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
-        res.json({ token, user: { id: user.id, name: user.name, role: user.role } });
+         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        res.json({ token, user: { id: user.id, name: user.name, role: user.role, permissions: user.permissions } });
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Server error' });
