@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Package, RefreshCw, LogOut, Bell, AlertTriangle, XCircle, History, Sparkles, Building2, Menu, X, Globe, Tag, ClipboardList, ShoppingCart, BarChart3, Users } from 'lucide-react';  
+import { LayoutDashboard, Package, RefreshCw, LogOut, Bell, AlertTriangle, XCircle, History, Sparkles, Building2, Menu, X, Globe, Tag, ClipboardList, ShoppingCart, BarChart3, Users, Wallet } from 'lucide-react';  
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
@@ -32,6 +32,7 @@ const Layout = ({ children }) => {
         { name: 'Products', icon: Package, path: '/products' },
         { name: 'Sales / POS', icon: ShoppingCart, path: '/sales' },
         { name: 'Orders', icon: ClipboardList, path: '/orders', adminOnly: true },
+        { name: 'Expenses', icon: Wallet, path: '/expenses', adminOnly: true },
         { name: 'Suppliers', icon: Building2, path: '/suppliers' },
         { name: 'Categories', icon: Tag, path: '/categories' },
         { name: 'Reports', icon: BarChart3, path: '/reports', adminOnly: true },

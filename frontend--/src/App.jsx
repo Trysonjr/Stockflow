@@ -17,6 +17,7 @@ import Orders from './pages/Orders.jsx';
 import Sales from './pages/Sales.jsx';
 import Reports from './pages/Reports.jsx'; 
 import Team from './pages/Team.jsx'; 
+import Expenses from './pages/Expenses.jsx'; 
 
 const ProtectedRoute = ({ children }) => {
     const { user } = useAuth();
@@ -48,6 +49,7 @@ function App() {
                             <Route path="/sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
                             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} /> 
                             <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} /> 
+                            <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
                         </Routes>
                     </Router>
                 </ToastProvider>

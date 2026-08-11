@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Plus, Download, Pencil, ArrowDownToLine, ArrowUpFromLine, Trash2, X, FileDown, Upload, Sparkles, Loader2, Camera } from 'lucide-react';
+import { Search, Plus, Download, Pencil, ArrowDownToLine, ArrowUpFromLine, Trash2, X, FileDown, Upload, Sparkles, Loader2, Camera, QrCode, Printer } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import axios from 'axios';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { QRCodeCanvas } from 'qrcode.react';
 
 const Products = () => {
     const { user } = useAuth();
@@ -25,6 +26,8 @@ const Products = () => {
     const [aiLoading, setAiLoading] = useState(false);
 
     const [isCameraOpen, setIsCameraOpen] = useState(false);
+    const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+    const [qrProduct, setQrProduct] = useState(null);
     const html5QrCodeRef = useRef(null);
 
     useEffect(() => { fetchProducts(); }, []);
@@ -143,11 +146,12 @@ const Products = () => {
         }
     };
 
-    // --- NEW: Camera Scanner Functions ---
+    // --- Camera Scanner Functions ---
     const startCamera = () => {
         setIsCameraOpen(true);
         setTimeout(() => {
-            html5QrCodeRef.current = new Html5Qrcode("camera-reader-products");
+            const formats = [Html5QrcodeSupportedFormats.UPC_A, Html5QrcodeSupportedFormats.UPC_E, Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8, Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.QR_CODE];
+            html5QrCodeRef.current = new Html5Qrcode("camera-reader-products", { formatsToSupport: formats, verbose: false });
             html5QrCodeRef.current.start(
                 { facingMode: "environment" },
                 { fps: 10, qrbox: { width: 250, height: 150 } },
@@ -178,12 +182,43 @@ const Products = () => {
 
     const stopCamera = async () => {
         if (html5QrCodeRef.current) {
-            try {
-                await html5QrCodeRef.current.stop();
-                await html5QrCodeRef.current.clear();
-            } catch (err) { console.error(err); }
+            try { await html5QrCodeRef.current.stop(); await html5QrCodeRef.current.clear(); } catch (err) { console.error(err); }
         }
         setIsCameraOpen(false);
+    };
+
+    // --- QR Code Print Function ---
+    const printQRCode = (product) => {
+        const printWindow = window.open('', '_blank', 'width=400,height=600');
+        const qrData = encodeURIComponent(product.sku);
+        
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Print QR Code - ${product.name}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+                    .label-container { border: 1px dashed #ccc; padding: 20px; display: inline-block; border-radius: 8px; }
+                    h2 { margin: 0 0 10px 0; font-size: 16px; color: #333; }
+                    p { margin: 5px 0; font-size: 12px; color: #666; }
+                    .qr-wrapper { margin-top: 15px; }
+                </style>
+            </head>
+            <body>
+                <div class="label-container">
+                    <h2>${product.name}</h2>
+                    <p>Price: K ${Number(product.selling_price).toFixed(2)}</p>
+                    <div class="qr-wrapper">
+                        <!-- This is a simple way to render QR code in a new window without React -->
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}" alt="QR Code" />
+                    </div>
+                    <p>SKU: ${product.sku}</p>
+                </div>
+                <script>window.onload = function() { window.print(); }</script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
     };
 
     const filteredProducts = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
@@ -234,6 +269,9 @@ const Products = () => {
                                 <td className="p-4">K {Number(p.selling_price).toFixed(2)}</td>
                                 <td className="p-4">
                                     <div className="flex gap-2">
+                                        <button onClick={() => { setQrProduct(p); setIsQrModalOpen(true); }} className="p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 rounded-lg" title="View/Print QR Code">
+                                            <QrCode size={16} />
+                                        </button>
                                         {isAdmin && (<button onClick={() => openModal('edit', p)} className="p-2 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-lg" title="Edit"><Pencil size={16} /></button>)}
                                         <button onClick={() => openModal('in', p)} className="p-2 text-green-500 hover:bg-green-100 dark:hover:bg-green-900 rounded-lg" title="Stock In"><ArrowDownToLine size={16} /></button>
                                         <button onClick={() => openModal('out', p)} className="p-2 text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-900 rounded-lg" title="Stock Out"><ArrowUpFromLine size={16} /></button>
@@ -308,6 +346,30 @@ const Products = () => {
                         <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white text-center">Scan Product Barcode</h2>
                         <div id="camera-reader-products" className="w-full rounded-lg overflow-hidden"></div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-4">Point your camera at the barcode to fill the SKU field.</p>
+                    </div>
+                </div>
+            )}
+
+            {/* QR Code View/Print Modal */}
+            {isQrModalOpen && qrProduct && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm p-6 relative text-center">
+                        <button onClick={() => setIsQrModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X size={24} /></button>
+                        <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{qrProduct.name}</h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Scan this code at the POS to ring up the item.</p>
+                        
+                        <div className="p-4 bg-white rounded-lg inline-block mb-4">
+                            <QRCodeCanvas value={qrProduct.sku} size={200} />
+                        </div>
+                        
+                        <div className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                            <p><strong>SKU:</strong> {qrProduct.sku}</p>
+                            <p><strong>Price:</strong> K {Number(qrProduct.selling_price).toFixed(2)}</p>
+                        </div>
+
+                        <button onClick={() => printQRCode(qrProduct)} className="w-full flex items-center justify-center gap-2 bg-primary text-white p-2 rounded-lg font-semibold hover:bg-blue-700">
+                            <Printer size={18} /> Print Label
+                        </button>
                     </div>
                 </div>
             )}
