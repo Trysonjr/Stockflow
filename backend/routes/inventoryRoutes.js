@@ -38,11 +38,19 @@ router.get('/stats', auth, async (req, res) => {
             ORDER BY sm.created_at DESC LIMIT 5
         `);
 
-        // New Financial Calculations
+        // Inventory Valuation
         const [[finance]] = await db.query('SELECT SUM(current_quantity * buying_price) as asset_value, SUM(current_quantity * selling_price) as potential_revenue FROM products');
         const assetValue = finance.asset_value || 0;
         const potentialRevenue = finance.potential_revenue || 0;
         const potentialProfit = potentialRevenue - assetValue;
+
+        // NEW: Actual Business Financials (Revenue vs Expenses)
+        const [[salesData]] = await db.query('SELECT SUM(total_price) as total_revenue FROM sales');
+        const [[expenseData]] = await db.query('SELECT SUM(amount) as total_expenses FROM expenses');
+        
+        const totalRevenue = salesData.total_revenue || 0;
+        const totalExpenses = expenseData.total_expenses || 0;
+        const netProfit = totalRevenue - totalExpenses;
         
         res.json({ 
             total: total.count, 
@@ -51,7 +59,10 @@ router.get('/stats', auth, async (req, res) => {
             recent,
             assetValue,
             potentialRevenue,
-            potentialProfit
+            potentialProfit,
+            totalRevenue,
+            totalExpenses,
+            netProfit
         });
     } catch (err) {
         console.error(err);
