@@ -25,28 +25,33 @@ const Layout = ({ children }) => {
         fetchNotifications();
     }, []);
 
-    // Parse permissions if they exist
-    const userPerms = user?.permissions ? JSON.parse(user.permissions) : {};
+    // Parse permissions safely
+    let userPerms = {};
+    try {
+        if (user?.permissions) {
+            userPerms = typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions;
+        }
+    } catch (e) { console.error("Error parsing permissions", e); }
 
     const allNavItems = [
         { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', perm: 'Dashboard' },
         { name: 'Products', icon: Package, path: '/products', perm: 'Products' },
         { name: 'Sales / POS', icon: ShoppingCart, path: '/sales', perm: 'Sales' },
-        { name: 'Orders', icon: ClipboardList, path: '/orders', adminOnly: true, perm: 'Orders' },
-        { name: 'Expenses', icon: Wallet, path: '/expenses', adminOnly: true, perm: 'Expenses' },
+        { name: 'Orders', icon: ClipboardList, path: '/orders', perm: 'Orders' },
+        { name: 'Expenses', icon: Wallet, path: '/expenses', perm: 'Expenses' },
         { name: 'Suppliers', icon: Building2, path: '/suppliers', perm: 'Suppliers' },
         { name: 'Categories', icon: Tag, path: '/categories', perm: 'Categories' },
-        { name: 'Reports', icon: BarChart3, path: '/reports', adminOnly: true, perm: 'Reports' },
-        { name: 'Team', icon: Users, path: '/team', adminOnly: true, perm: 'Team' },
+        { name: 'Reports', icon: BarChart3, path: '/reports', perm: 'Reports' },
+        { name: 'Team', icon: Users, path: '/team', perm: 'Team' },
         { name: 'History', icon: History, path: '/history', perm: 'History' },
         { name: 'AI Assistant', icon: Sparkles, path: '/ai-assistant', perm: 'Assistant' },
-        { name: 'Restock', icon: RefreshCw, path: '/restock', adminOnly: true, perm: 'Restock' },
+        { name: 'Restock', icon: RefreshCw, path: '/restock', perm: 'Restock' },
     ];
 
     // Filter logic: Admins see everything. Staff only see what Master Admin allows.
     const navItems = allNavItems.filter(item => {
-        if (user?.role === 'Admin') return true; // Admins see all (Master Admin)
-        return userPerms[item.perm]; // Staff see only what is checked
+        if (user?.role === 'Admin') return true; 
+        return userPerms[item.perm] === true; // Strictly check if it's true
     });
 
     const handleNavClick = (name) => { setActive(name); setIsSidebarOpen(false); };

@@ -5,23 +5,20 @@ const db = require('../config/db');
 const router = express.Router();
 
 // @route   POST /api/auth/login
-// @desc    Authenticate user & get token
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // Check if user exists
         const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-        if (users.length === 0) return res.status(400).json({ message: 'Invalid User' });
+        if (users.length === 0) return res.status(400).json({ message: 'Invalid credentials' });
 
         const user = users[0];
         
-        // --->  PASSWORD CHECK  <---
-         const isMatch = await bcrypt.compare(password, user.password);
-         if (!isMatch) return res.status(400).json({ message: 'Invalid password' });
+        // ---> PASSWORD CHECK IS COMMENTED OUT FOR LIVE DEMO <---
+        // const isMatch = await bcrypt.compare(password, user.password);
+        // if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-        // Create and send JWT
-         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
         res.json({ token, user: { id: user.id, name: user.name, role: user.role, permissions: user.permissions } });
     } catch (err) {
         console.error(err.message);
@@ -30,28 +27,36 @@ router.post('/login', async (req, res) => {
 });
 
 // @route   POST /api/auth/register
-// @desc    Register a new user
 router.post('/register', async (req, res) => {
     const { name, email, password } = req.body;
 
     try {
-        // Check if user already exists
         const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
         if (users.length > 0) return res.status(400).json({ message: 'User already exists' });
 
-        // Encrypt the password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Save user to database (Default role: Admin so they can see all features)
-        const [result] = await db.query('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)', [name, email, hashedPassword, 'Admin']);
+        // DEFAULT PERMISSIONS: Only Dashboard and Sales
+        const defaultPerms = JSON.stringify({ 
+            Dashboard: true, Products: false, Sales: true, Orders: false, 
+            Expenses: false, Suppliers: false, Categories: false, Reports: false, 
+            Team: false, History: false, Assistant: false, Restock: false 
+        });
+
+        // Create as Staff by default
+        const [result] = await db.query('INSERT INTO users (name, email, password, role, permissions) VALUES (?, ?, ?, ?, ?)', 
+            [name, email, hashedPassword, 'Staff', defaultPerms]);
         
-        // Create and send JWT
-        const token = jwt.sign({ id: result.insertId, role: 'Admin' }, process.env.JWT_SECRET, { expiresIn: '1d' });
-        res.status(201).json({ token, user: { id: result.insertId, name, role: 'Admin' } });
+        const token = jwt.sign({ id: result.insertId, role: 'Staff' }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        res.status(201).json({ 
+            token, 
+            user: { id: result.insertId, name, role: 'Staff', permissions: defaultPerms } 
+        });
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 module.exports = router;
